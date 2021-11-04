@@ -13,7 +13,7 @@ The `get_logger` class method expects no mandatory argument, but some optional
 ones:
 
     name: the name for the logger.
-    filename: the path to the logging configuration file (*.ini).
+    cfg_filename: the path to the logging configuration file (*.ini).
 
 As an example:
 
