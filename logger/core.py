@@ -4,9 +4,14 @@ import os
 from logging.config import fileConfig
 from time import gmtime
 
-ENVVAR = 'LOGGER_CONFIG_PATH'
+ENVVAR = 'LOG_CONFIG_PATH'
 
 logging.Formatter.converter = gmtime
+
+level = {"INFO": logging.INFO,
+         "DEBUG": logging.DEBUG,
+         "WARNING": logging.WARNING,
+         "ERROR": logging.ERROR}
 
 
 class FactoryLogging:
@@ -25,9 +30,9 @@ class FactoryLogging:
         :param filename: configuration file name.
         :return: Absolute path to the configuration file.
         """
-        if not filename:
-            _error = "Configuration filename has not been provided."
-            raise ValueError(_error)
+        # if not filename:
+        #     _error = "Configuration filename has not been provided."
+        #     raise ValueError(_error)
         # Check if filename is a valid filepath
         if os.path.isfile(os.path.abspath(filename)):
             return os.path.abspath(filename)
@@ -37,7 +42,7 @@ class FactoryLogging:
             try:
                 default_cfg_log_path = os.environ[ENVVAR]
             except KeyError:
-                _msg += "DEFAULT_CFG_LOG_PATH is undefined."
+                _msg += "{} is undefined.".format(ENVVAR)
                 raise ValueError(_msg)
             filepath = os.path.join(default_cfg_log_path, filename)
             if os.path.isfile(filepath):
@@ -47,7 +52,7 @@ class FactoryLogging:
                 raise ValueError(_msg)
 
     @staticmethod
-    def get_logger(name='root', cfg_filename=None):
+    def config_from_file(cfg_filename, loglevel="DEBUG"):
         """
         Logging helper based on a configuration file. This method will always
         return a valid logger object, following the next steps:
@@ -59,11 +64,12 @@ class FactoryLogging:
         created by using the fileConfig method from the standard python logging
         module.
 
-        :param name: Logger name.
         :param cfg_filename: The logging configuration filename.
-        :return: The created logger.
+        :param loglevel: Default loglevel
+        :return: None
         """
-
+        loglevel = loglevel.upper()
+        name = FactoryLogging.__name__
         # Try to get a valid configuration filepath
         try:
             cfg_filepath = FactoryLogging._get_cfg_filepath(cfg_filename)
@@ -75,16 +81,15 @@ class FactoryLogging:
             chlr = logging.StreamHandler()
             chlr.setFormatter(formatter)
             logger = logging.getLogger(name)
-            logger.setLevel(logging.DEBUG)
+            logger.setLevel(level[loglevel])
             logger.addHandler(chlr)
-            # First logged message is about logger creation
             logger.warning(str(e))
             logger.info("Default logging CONFIGURATION (output stream)")
-            return logger
 
         else:
             fileConfig(cfg_filepath)
             logger = logging.getLogger(name)
-            logger.setLevel(logging.DEBUG)
+            logger.setLevel(level[loglevel])
             logger.info("Logging CONFIGURATION from file ({})".format(cfg_filepath))
-            return logger
+
+
